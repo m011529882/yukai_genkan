@@ -8,6 +8,17 @@ sys.path.insert(0, osp.abspath(inspath))
 import speak
 from speak import Speak, NluMetaData
 
+import RPi.GPIO as GPIO
+import time
+
+# init GPIO
+GPIO.setmode(GPIO.BCM)
+servo_gpio = 4
+GPIO.setup(servo_gpio, GPIO.OUT)
+servo = GPIO.PWM(servo_gpio, 50)
+
+mute_after_play = true
+
 
 sdk = None
 
@@ -34,7 +45,7 @@ def on_started():
     metaData = NluMetaData()
     metaData.cacheFlag = False
     # metaData.initTalkFlag = True
-    metaData.voiceText = "こんにちは"
+    metaData.voiceText = "合言葉"
     sdk.put_meta(metaData)
 
     return
@@ -52,6 +63,16 @@ def on_stop():
 
 def on_text_out(data):
     print ("on_text_out", data)
+    if data.type == "nlu_result" and data.version == "sebastien-1.0.0" :
+        text = data.systemText.expression
+        switch (text) :
+            case "山" :
+                global mute_after_play
+                mute_after_play = false
+                break
+            case "合言葉が認証されました" :
+                servo.ChangeDutyCycle(12)
+                time.seep(1)
     return
 
 
@@ -69,7 +90,13 @@ def on_play_end(data):
     # 音声再生が終わったら、wake up wordを待機するためにSebastienの音声入力をOFFにする
     print ("on_play_end", data)
     global sdk
-    sdk.mute()
+    global mute_after_play
+    if mute_after_play :
+      sdk.mute()
+    else :
+      # 続けて音声を受け取る
+      # その次の音声再生ではmute音声入力をoffにする
+      mute_after_play = true
     return
 
 
