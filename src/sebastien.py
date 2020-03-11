@@ -70,15 +70,28 @@ def on_text_out(data):
 def on_meta_out(data):
     print("on_meta_out", data)
     metadict = json.loads(data)
-    if metadict["type"] == "null_result" and metadict["version"] == "sebastien-1.0.0":
-        if metadict.has_key("systemText"):
-            text = metadict["systemText"]["expression"]
-            if text == "山":
-                global mute_after_play
-                mute_after_play = False
-            elif text == "合言葉が認証されました":
-                servo.ChangeDutyCycle(12)
-                time.sleep(1)
+    print(metadict)
+    try:
+        if metadict["type"] == "nlu_result" and metadict["version"] == "sebastien-1.0.0":
+            if "systemText" in metadict:
+                text = metadict["systemText"]["expression"]
+                print("text:", text, text == "山", text == "合言葉が認証されました")
+                if text == "山":
+                    global mute_after_play
+                    mute_after_play = False
+                    global sdk
+                    sdk.unmute()
+                elif text == "合言葉が認証されました":
+                    servo.start(0)
+                    servo.ChangeDutyCycle(7.5)
+                    time.sleep(2)
+                    servo.ChangeDutyCycle(2.5)
+                    time.sleep(2)
+                    servo.ChangeDutyCycle(12.5)
+                    time.sleep(2)
+                    servo.stop()
+    except Exception as e:
+       print(e)
     return
 
 
