@@ -24,11 +24,11 @@ def openDoor():
 
 	for i in range(1):
     #デューティサイクルの値を変更することでサーボが回って角度が変わる。
-		servo.ChangeDutyCycle(2.5)
+		servo.ChangeDutyCycle(10.0)
 		time.sleep(2.0)
-		servo.ChangeDutyCycle(12.0)
+		servo.ChangeDutyCycle(5.5)
 		time.sleep(2.0)
-		servo.ChangeDutyCycle(2.5)
+		servo.ChangeDutyCycle(10.0)
 		time.sleep(2.0)
 	servo.stop()
 	GPIO.cleanup()
