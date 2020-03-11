@@ -1,15 +1,15 @@
 # coding:utf-8
+import json
+import time
+import RPi.GPIO as GPIO
+from speak import Speak, NluMetaData
+import speak
 import os.path as osp
 import sys
 ver = (sys.version_info.major, sys.version_info.minor)
 inspath = '../.lib/lib/python%d.%d/site-packages' % ver
 sys.path.insert(0, osp.abspath(inspath))
 
-import speak
-from speak import Speak, NluMetaData
-
-import RPi.GPIO as GPIO
-import time
 
 # init GPIO
 GPIO.setmode(GPIO.BCM)
@@ -22,20 +22,21 @@ mute_after_play = True
 
 sdk = None
 
+
 def mute():
-    print ("mute")
+    print("mute")
     global sdk
     sdk.mute()
 
 
 def unmute():
-    print ("unmute")
+    print("unmute")
     global sdk
     sdk.unmute()
 
 
 def on_started():
-    print ("on_started")
+    print("on_started")
 
     # First
     global sdk
@@ -52,63 +53,66 @@ def on_started():
 
 
 def on_failed(ecode, failstr):
-    print ("on_failed : %s(%d)" % (failstr, ecode))
+    print("on_failed : %s(%d)" % (failstr, ecode))
     return
 
 
 def on_stop():
-    print ("on_stop")
+    print("on_stop")
     return
 
 
 def on_text_out(data):
-    print ("on_text_out", data)
-    if data.type == "nlu_result" and data.version == "sebastien-1.0.0" :
-        text = data.systemText.expression
-        if text == "山" :
-            global mute_after_play
-            mute_after_play = False
-        elif text == "合言葉が認証されました" :
-            servo.ChangeDutyCycle(12)
-            time.seep(1)
+    print("on_text_out", data)
     return
 
 
 def on_meta_out(data):
-    print ("on_meta_out", data)
+    print("on_meta_out", data)
+    metadict = json.loads(data)
+    if metadict["type"] == "null_result" and metadict["version"] == "sebastien-1.0.0":
+        if metadict.has_key("systemText"):
+           text = metadict["systemText"]["expression"]
+           if text == "山":
+                global mute_after_play
+                mute_after_play = False
+            elif text == "合言葉が認証されました":
+                servo.ChangeDutyCycle(12)
+                time.sleep(1)
     return
 
 
 def on_play_start(data):
-    print ("on_play_start", data)
+    print("on_play_start", data)
     return
 
 
 def on_play_end(data):
     # 音声再生が終わったら、wake up wordを待機するためにSebastienの音声入力をOFFにする
-    print ("on_play_end", data)
+    print("on_play_end", data)
     global sdk
     global mute_after_play
-    if mute_after_play :
-      sdk.mute()
-    else :
-      # 続けて音声を受け取る
-      # その次の音声再生ではmute音声入力をoffにする
-      mute_after_play = True
+    if mute_after_play:
+        sdk.mute()
+    else:
+        # 続けて音声を受け取る
+        # その次の音声再生ではmute音声入力をoffにする
+        mute_after_play = True
     return
 
 
 def on_cache_failed():
-    print ("on_cache_failed")
+    print("on_cache_failed")
     return
 
 
 def on_gain_value(data):
-    print ("on_gain_value", data)
+    print("on_gain_value", data)
     return
 
+
 def cancel_play():
-    print ("cancel play")
+    print("cancel play")
 
     global sdk
     sdk.cancel_play()
