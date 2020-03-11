@@ -65,10 +65,10 @@ def on_text_out(data):
     print ("on_text_out", data)
     if data.type == "nlu_result" and data.version == "sebastien-1.0.0" :
         text = data.systemText.expression
-        if text === "山" :
+        if text == "山" :
             global mute_after_play
             mute_after_play = false
-        elif text === "合言葉が認証されました" :
+        elif text == "合言葉が認証されました" :
             servo.ChangeDutyCycle(12)
             time.seep(1)
     return
