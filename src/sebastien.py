@@ -17,7 +17,7 @@ servo_gpio = 4
 GPIO.setup(servo_gpio, GPIO.OUT)
 servo = GPIO.PWM(servo_gpio, 50)
 
-mute_after_play = true
+mute_after_play = True
 
 
 sdk = None
@@ -67,7 +67,7 @@ def on_text_out(data):
         text = data.systemText.expression
         if text == "山" :
             global mute_after_play
-            mute_after_play = false
+            mute_after_play = False
         elif text == "合言葉が認証されました" :
             servo.ChangeDutyCycle(12)
             time.seep(1)
@@ -94,7 +94,7 @@ def on_play_end(data):
     else :
       # 続けて音声を受け取る
       # その次の音声再生ではmute音声入力をoffにする
-      mute_after_play = true
+      mute_after_play = True
     return
 
 
