@@ -72,8 +72,8 @@ def on_meta_out(data):
     metadict = json.loads(data)
     if metadict["type"] == "null_result" and metadict["version"] == "sebastien-1.0.0":
         if metadict.has_key("systemText"):
-           text = metadict["systemText"]["expression"]
-           if text == "山":
+            text = metadict["systemText"]["expression"]
+            if text == "山":
                 global mute_after_play
                 mute_after_play = False
             elif text == "合言葉が認証されました":
