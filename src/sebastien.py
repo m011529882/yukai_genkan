@@ -14,7 +14,7 @@ sys.path.insert(0, osp.abspath(inspath))
 
 # init GPIO
 GPIO.setmode(GPIO.BCM)
-servo_gpio = 4
+servo_gpio = 5
 GPIO.setup(servo_gpio, GPIO.OUT)
 servo = GPIO.PWM(servo_gpio, 50)
 
@@ -56,16 +56,8 @@ def unmute():
 def on_started():
     print("on_started")
 
-    # First
-    global sdk
-
-    # アプリケーション起動時に挨拶文を送信することにより、
-    # Sebastienから返信メッセージが再生され起動確認が出来る。
-    metaData = NluMetaData()
-    metaData.cacheFlag = False
-    # metaData.initTalkFlag = True
-    metaData.voiceText = "合言葉"
-    sdk.put_meta(metaData)
+    global check_sensor
+    check_sensor = True
 
     return
 
@@ -100,14 +92,10 @@ def on_meta_out(data):
                     global sdk
                     sdk.unmute()
                 elif text == "合言葉が認証されました":
-                    servo.start(0)
-                    servo.ChangeDutyCycle(7.5)
+                    openDoor()
                     time.sleep(2)
-                    servo.ChangeDutyCycle(2.5)
-                    time.sleep(2)
-                    servo.ChangeDutyCycle(12.5)
-                    time.sleep(2)
-                    servo.stop()
+                    global check_sensor
+                    check_sensor = True
     except Exception as e:
        print(e)
     return
@@ -169,10 +157,6 @@ def init(configname=None):
     sdk.set_on_play_start(on_play_start)
     sdk.set_on_play_end(on_play_end)
 
-    global check_sensor
-    check_sensor = True
-
-
 def start():
     sdk.start(on_started, on_failed, False)
 
@@ -180,8 +164,28 @@ def poll():
     global sdk
     sdk.poll()
 
+def sendAikotobaCommand():
+    global sdk
+    metaData = NluMetaData()
+    metaData.cacheFlag = False
+    # metaData.initTalkFlag = True
+    metaData.voiceText = "合言葉"
+    sdk.put_meta(metaData)
+
+def openDoor():
+    servo.start(0)
+    servo.ChangeDutyCycle(2.5)
+    time.sleep(4.0)
+    servo.ChangeDutyCycle(7.25)
+    time.sleep(1.0)
+    servo.stop()
+
 def sensorDetected(value):
     print("ON")
+    global check_sensor
+    check_sensor = False
+    openDoor()
+    check_sensor = True
 
 def tickSensor():
     try:
