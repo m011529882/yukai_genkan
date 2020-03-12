@@ -2,6 +2,7 @@
 import sys
 import RPi.GPIO as GPIO
 import sebastien
+import time
 
 # 定数値
 
@@ -35,7 +36,19 @@ if __name__ == "__main__":
         codama_setup()
 
         sebastien.init(CONFIGNAME)
+        print("start")
         sebastien.start()
-    except:
+        print("started")
+        count = 0
+        while True:
+            sebastien.tickSensor()
+            time.sleep(0.03)
+            count += 1
+            if count >70 :
+                print("poll")
+                sebastien.poll()
+                count = 0
+    except Exception as e:
+        print(e)
         cleanup()
         exit(0)

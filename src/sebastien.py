@@ -6,6 +6,7 @@ from speak import Speak, NluMetaData
 import speak
 import os.path as osp
 import sys
+import smbus
 ver = (sys.version_info.major, sys.version_info.minor)
 inspath = '../.lib/lib/python%d.%d/site-packages' % ver
 sys.path.insert(0, osp.abspath(inspath))
@@ -19,6 +20,23 @@ servo = GPIO.PWM(servo_gpio, 50)
 
 mute_after_play = True
 
+# init I2C
+i2c = smbus.SMBus(3)
+sensor_addr = 0x68
+sensor_conf = 0b10011000
+i2c.write_byte(sensor_addr, sensor_conf)
+
+check_sensor = False
+sensor_buff = []
+sensor_threshold = 0
+
+# https://www.denshi.club/pc/raspi/5raspberry-pi-zeroiot4a-d1-3.html
+def swap16(x):
+        return (((x << 8) & 0xFF00) |
+                ((x >> 8) & 0x00FF))
+def sign16(x):
+        return ( -(x & 0b1000000000000000) |
+                  (x & 0b0111111111111111) )
 
 sdk = None
 
@@ -151,6 +169,36 @@ def init(configname=None):
     sdk.set_on_play_start(on_play_start)
     sdk.set_on_play_end(on_play_end)
 
+    global check_sensor
+    check_sensor = True
+
 
 def start():
-    sdk.start(on_started, on_failed)
+    sdk.start(on_started, on_failed, False)
+
+def poll():
+    global sdk
+    sdk.poll()
+
+def sensorDetected(value):
+    print("ON")
+
+def tickSensor():
+    try:
+        if not check_sensor:
+            return
+        global sensor_buff
+        
+        data = i2c.read_word_data(sensor_addr, sensor_conf)
+        raw = swap16(int(hex(data),16))
+        raw_s = sign16(int(hex(raw),16))
+        value = round((1 * raw_s / 32767),4)
+        sensor_buff.append(value)
+        if len(sensor_buff) > 30:
+            max_value = max(sensor_buff)
+            print(max_value)
+            sensor_buff = []
+            if(max_value > sensor_threshold) :
+                sensorDetected(max_value)
+    except Exception as e:
+        print("sensor error:", e)
