@@ -11,6 +11,7 @@ ver = (sys.version_info.major, sys.version_info.minor)
 inspath = '../.lib/lib/python%d.%d/site-packages' % ver
 sys.path.insert(0, osp.abspath(inspath))
 
+is_started = False
 
 # init GPIO
 GPIO.setmode(GPIO.BCM)
@@ -55,9 +56,16 @@ def unmute():
 
 def on_started():
     print("on_started")
+    global is_started
+    is_started = True
 
     global check_sensor
     check_sensor = True
+
+    # for debug
+    time.sleep(1)
+    sensorDetected()
+
 
     return
 
@@ -93,7 +101,6 @@ def on_meta_out(data):
                     sdk.unmute()
                 elif text == "合言葉が認証されました":
                     openDoor()
-                    time.sleep(2)
                     global check_sensor
                     check_sensor = True
     except Exception as e:
@@ -161,6 +168,8 @@ def start():
     sdk.start(on_started, on_failed, False)
 
 def poll():
+    if not is_started :
+        return
     global sdk
     sdk.poll()
 
@@ -168,7 +177,6 @@ def sendAikotobaCommand():
     global sdk
     metaData = NluMetaData()
     metaData.cacheFlag = False
-    # metaData.initTalkFlag = True
     metaData.voiceText = "合言葉"
     sdk.put_meta(metaData)
 
@@ -184,8 +192,7 @@ def sensorDetected(value):
     print("ON")
     global check_sensor
     check_sensor = False
-    openDoor()
-    check_sensor = True
+    sendAikotobaCommand()
 
 def tickSensor():
     try:
